@@ -159,8 +159,8 @@ const verifyPatientEmail = async (payload: IVerifyEmailPayload) => {
 		throw new Error("User is Blocked")
 	}
 
-	if(!isUserExist?.emailVerified){
-		throw new Error("Email Verified Successfully")
+	if(isUserExist?.emailVerified){
+		throw new Error("Email Already Verified")
 	}
 
 	if(isUserExist?.isDeleted || isUserExist?.status === "DELETED"){
