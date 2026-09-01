@@ -160,7 +160,7 @@ const verifyPatientEmail = async (payload: IVerifyEmailPayload) => {
 	}
 
 	if(!isUserExist?.emailVerified){
-		throw new Error("Email Already Verified")
+		throw new Error("Email Verified Successfully")
 	}
 
 	if(isUserExist?.isDeleted || isUserExist?.status === "DELETED"){
@@ -209,6 +209,8 @@ const verifyPatientEmail = async (payload: IVerifyEmailPayload) => {
 		omit: { password: true },
 		include: { patient: true },
 	});
+
+	await redisClient.del([registerPatientKey]);
 
 	const { patient, ...user } = createdUser;
 	const jwtPayload = {
