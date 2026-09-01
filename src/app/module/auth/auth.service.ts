@@ -2,6 +2,8 @@
 import bcrypt from "bcryptjs";
 import type { JwtPayload, SignOptions } from "jsonwebtoken";
 import crypto from "crypto";
+import path from "path";
+import ejs from "ejs";
 import {
 	AuthProvider,
 	Role,
@@ -373,19 +375,32 @@ const forgotPassword = async (payload: IForgotPassword)=>{
 
 	const key = `forgot-password-otp:${isUserExist.email}`
 
+	const expirationSeconds = 5 * 60; // 5 minutes
+
 	await redisClient.set(key, otp, {
 		expiration: {
 			type: "EX",
-			value: 5 * 60
+			value: expirationSeconds
 		}
 	})
+
+	const templatePath = path.join(process.cwd(), "src/app/template/forgot-password.ejs");
+
+	const templateData = {
+		name: isUserExist.name,
+		OTP: otp,
+		expirationMinutes: expirationSeconds / 60
+	}
+
+	const html =await ejs.renderFile(templatePath, templateData)
 
 	await transporter.sendMail({
 		from: config.email_sender,
 		to: isUserExist.email,
 		subject: "Forgot Password",
 		// text: `Your OTP is ${otp}`
-		html: `<h1>Your OTP is ${otp}</h1>`
+		// html: `<h1>Your OTP is ${otp}</h1>`
+		html
 	})
 }
 
@@ -439,12 +454,21 @@ const resetPassword = async (payload: IResetPassword)=>{
 
 	await redisClient.del([key]);
 
+	const templatePath = path.join(process.cwd(), "src/app/template/reset-password-success.ejs");
+
+	const templateData = {
+		name: isUserExist.name
+	}
+
+	const html =await ejs.renderFile(templatePath,templateData)
+
 	await transporter.sendMail({
 		from: config.email_sender,
 		to: isUserExist.email,
 		subject: "Password Changed",
 		// text: `Your OTP is ${otp}`
-		html: `<h1>Your Password is Changed</h1>`
+		// html: `<h1>Your Password is Changed</h1>`
+		html
 	})
 }
 
