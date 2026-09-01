@@ -147,23 +147,23 @@ const verifyPatientEmail = async (payload: IVerifyEmailPayload) => {
 		where: { email },
 	});
 
-	if (isUserExist?.emailVerified) {
-		throw new Error("Email is already verified");
-	}
+	// if (isUserExist?.emailVerified) {
+	// 	throw new Error("Email is already verified");
+	// }
 
-	if(!isUserExist){
-		throw new Error("User Does not Exist")
-	};
+	// if(!isUserExist){
+	// 	throw new Error("User Already Exist")
+	// };
 
-	if(isUserExist.status === "BLOCKED"){
+	if(isUserExist?.status === "BLOCKED"){
 		throw new Error("User is Blocked")
 	}
 
-	if(!isUserExist.emailVerified){
+	if(!isUserExist?.emailVerified){
 		throw new Error("Email Already Verified")
 	}
 
-	if(isUserExist.isDeleted || isUserExist.status === "DELETED"){
+	if(isUserExist?.isDeleted || isUserExist?.status === "DELETED"){
 		throw new Error("User is Deleted")
 	}
 
