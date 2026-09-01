@@ -37,6 +37,14 @@ router.post("/register",
 	validateRequest(UserValidation.PatientRegistrationZodSchema),
 
 	 AuthController.registerPatient);
+
+router.post("/verify-email",
+    
+	validateRequest(UserValidation.PatientVerifyEmailZodSchema),
+
+	 AuthController.verifyPatientEmail);
+
+
 router.post("/login",
 	validateRequest(UserValidation.PatientLoginZodSchema),
 	 AuthController.loginUser);
