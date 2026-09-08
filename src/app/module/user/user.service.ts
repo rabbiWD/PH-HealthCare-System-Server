@@ -1,8 +1,11 @@
+import { UploadApiResponse } from "cloudinary";
 import { cloudinary } from "../../lib/cloudinary"
 import { prisma } from "../../lib/prisma";
 
 const uploadProfileImage = async(buffer: Buffer, userId: string)=>{
-    await cloudinary.uploader.upload_stream(
+  
+const clodinaryResult = await new Promise<UploadApiResponse> ((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
         {
         resource_type: "auto",
        },
@@ -10,39 +13,37 @@ const uploadProfileImage = async(buffer: Buffer, userId: string)=>{
 
        async(error, result) => {
         if(error){
-            console.log(error)
-            throw new Error(error.message);
+            return reject(error)
         }
-        console.log(result, "result");
 
-        const updateUser = await prisma.user.update({
+        if(!result){
+            return reject(new Error("No result returned from Cloudinary"))
+        }
+
+        resolve(result)
+
+        
+        
+       }
+).end(buffer)
+})
+
+const updateUser = await prisma.user.update({
             where: {
                 id: userId
             },
             data: {
-                profileImage: result?.secure_url,
-                imagePublicId: result?.public_id
+                profileImage: clodinaryResult?.secure_url,
+                imagePublicId: clodinaryResult?.public_id
+            },
+
+            omit: {
+                password: true,
             }
+      });
+   
 
-            
-        });
-        console.log(updateUser, "updateUser")
-        // return result;
-       }
-).end(buffer)
-
-const user = await prisma.user.findUnique({
-    where: {
-        id: userId
-    },
-
-    omit: {
-        password: true,
-    }
-    
-})
-
-return user
+      return updateUser
 
 }
 
