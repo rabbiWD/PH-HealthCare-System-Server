@@ -11,7 +11,9 @@ const uploadProfileImage = catchAsync(async (req: Request, res: Response) => {
         throw new Error("No file Provided.")
     }
 
-    await UserService.uploadProfileImage(req.file?.buffer);
+    const userId = req.user?.userId;
+
+    await UserService.uploadProfileImage(req.file?.buffer, userId!);
 
 	sendResponse(res, {
 		statusCode: httpStatus.OK,
