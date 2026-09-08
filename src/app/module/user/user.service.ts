@@ -31,6 +31,19 @@ const uploadProfileImage = async(buffer: Buffer, userId: string)=>{
        }
 ).end(buffer)
 
+const user = await prisma.user.findUnique({
+    where: {
+        id: userId
+    },
+
+    omit: {
+        password: true,
+    }
+    
+})
+
+return user
+
 }
 
 export const UserService = {
