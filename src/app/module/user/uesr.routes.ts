@@ -6,12 +6,14 @@ import {  UserValidation } from "./auth.validation";
 
 import z from "zod";
 import { validateRequest } from "../../middleware/validateRequest";
+import { UserController } from "./user.controller";
+import { upload } from "../../lib/multer";
 
 const router = Router();
 
 
 router.patch("/profile-image",
-    validateRequest(UserValidation.ResetPasswordZodSchema),
-     AuthController.resetPassword);
+     upload.single("profileImage"),
+     UserController.uploadProfileImage);
 
 export const UserRoutes = router;
