@@ -16,6 +16,7 @@ import { redisClient } from "./app/lib/redis";
 import crypto from "crypto";
 import { UserRoutes } from "./app/module/user/uesr.routes";
 import { getBkashIdToken } from "./app/lib/bkash";
+import { AppoinmentRoutes } from "./app/module/appoinment/appoinment.routes";
 
 const app: Application = express();
 
@@ -35,6 +36,7 @@ app.use(cookieParser());
 
 app.use("/api/v1/auth", AuthRoutes);
 app.use("/api/v1/user", UserRoutes);
+app.use("/api/v1/appoinment", AppoinmentRoutes);
 
 app.get("/test", async (req: Request, res: Response, next: NextFunction)=>{
 	try{
