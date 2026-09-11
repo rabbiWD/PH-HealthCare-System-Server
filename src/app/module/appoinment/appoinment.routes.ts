@@ -7,4 +7,7 @@ const router = Router();
 
 router.post("/book-appoinment", AppoinmentController.bookAppoinment);
 
+// book appoinment callack url
+router.get("/book-appoinment/payment/callback", ()=>{});
+
 export const AppoinmentRoutes = router;

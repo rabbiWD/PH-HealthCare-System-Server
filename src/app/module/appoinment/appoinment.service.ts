@@ -1,117 +1,46 @@
+import config from "../../config";
+import { getBkashIdToken } from "../../lib/bkash";
 
-const verifyPatientEmail = async (payload: IVerifyEmailPayload) => {
+const bookAppoinment = async () => {
+    // business logic
 
-	const otp = payload.otp;
-	const email = payload.email.trim().toLowerCase();
+    const bkashIdToken = await getBkashIdToken();
 
-	const isUserExist = await prisma.user.findUnique({
-		where: { email },
-	});
+    if (!bkashIdToken) {
+        throw new Error("Bkash ID Token not available");
+    }
 
-	// if (isUserExist?.emailVerified) {
-	// 	throw new Error("Email is already verified");
-	// }
+    const bkashCreatePaymentResponse = await 
+    fetch(`${config.bkash_base_url}/tokenized/checkout/payment/create`, {
+        method: "POST",
+        headers: {  
+            'Content-Type': 'application/json',
+             Accept: 'application/json',   
+            'authorization':  bkashIdToken,  
+            "X-APP-Key": config.bkash_app_key
+        },
+        body: JSON.stringify({
+            agreementId: "agreement123",
+            mode: "0011",
+            payerReference: "01723888888",
+            callbackURL: `${config.bkash_callback_url}/book-appoinment/payment-callback`,
+            // merchantAssociationInfo: "MI05MID54RF091234560ne",
+            amount: "10",
+            currency: "BDT",
+            intent: "sale",
+            merchantInvoiceNumber: "inv001"
+        })
+    }); 
 
-	// if(!isUserExist){
-	// 	throw new Error("User Already Exist")
-	// };
+    const bkashCreatePaymentResult = await bkashCreatePaymentResponse.json();
 
-	if(isUserExist?.status === "BLOCKED"){
-		throw new Error("User is Blocked")
-	}
+    // if (!bkashCreatePaymentResponse.ok) {
+    //     throw new Error("Bkash Payment Creation Failed");
+    // }
 
-	if(isUserExist?.emailVerified){
-		throw new Error("Email Already Verified")
-	}
-
-	if(isUserExist?.isDeleted || isUserExist?.status === "DELETED"){
-		throw new Error("User is Deleted")
-	}
-
-	const otpKey = `register-patient-otp:${email}`
-
-	const redisOtp = await redisClient.get(otpKey)
-
-	if(!redisOtp){
-		throw new Error("Invalid OTP")
-	}
-
-	if(redisOtp !== otp){
-		throw new Error("OTP Does not Match")
-	}
-
-	await redisClient.del([otpKey]);
-
-	const registerPatientKey = `register-patient-data:${email}`
-
-	const redisPatientData = await redisClient.get(registerPatientKey)
-
-	if(!redisPatientData){
-		throw new Error("Patient Does not Exist");
-	}
-
-	const patientPayload : IRegisterPatientPayload = JSON.parse(redisPatientData)
-	 
-	 const createdUser = await prisma.user.create({
-		data: {
-			name: patientPayload.name,
-			email: patientPayload.email,
-			password: patientPayload.password,
-			role: Role.PATIENT,
-			status: UserStatus.ACTIVE,
-			emailVerified: true,
-			patient: {
-				create: { 
-					name: patientPayload.name, 
-					email: patientPayload.email, 
-					contactNumber: patientPayload?.patient?.contactNumber || "" },
-			},
-		},
-		omit: { password: true },
-		include: { patient: true },
-	});
-
-	await redisClient.del([registerPatientKey]);
-
-	const templatePath = path.join(process.cwd(), "src/app/template/welcome-email.ejs");
-
-	const templateData = {
-		name: createdUser.name,
-	}
-
-	const html =await ejs.renderFile(templatePath, templateData)
-
-	await transporter.sendMail({
-		from: config.email_sender,
-		to: email,
-		subject: "Welcome to PH Healthcare System",
-		html
-	})
-
-	const { patient, ...user } = createdUser;
-	const jwtPayload = {
-		userId: user.id,
-		name: user.name,
-		email: user.email,
-		role: user.role,
-	};
-
-	const accessToken = jwtUtils.createToken(
-		jwtPayload,
-		config.jwt_access_secret,
-		config.jwt_access_expires_in as SignOptions,
-	);
-
-	const refreshToken = jwtUtils.createToken(
-		jwtPayload,
-		config.jwt_refresh_secret,
-		config.jwt_refresh_expires_in as SignOptions,
-	);
-
-	return {
-		user,
-		patient,
-		accessToken,
-		refreshToken,
-	};
+    return bkashCreatePaymentResult;
 }
+
+export const AppoinmentService = {
+    bookAppoinment
+}       
